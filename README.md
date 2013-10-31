@@ -122,3 +122,4 @@ To Do
 - Use these records to build an index of Elixir core's functions
 - Document using these records so other 3rd party libraries can maintain their own
 - Investigate custom context-aware module attributes similar to `@doc` that would enable 3rd party library developers to more easily specify the tags and taint levels of their functions
+- Write tests for and prevent undesirable access to top-level directives (like require) and meta-programming exploits
