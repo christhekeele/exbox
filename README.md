@@ -36,62 +36,62 @@ It assumes you have Elixir 0.10.4-dev.
 ### Defining a sandbox
 
 ```elixir
-  defmodule My.Sandbox do
-    use Exbox.Sandbox.Behaviour
-    allow String, [reverse: 1]
-    allow IO, [puts: 1]
-    allow Enum, :all
-  end
+defmodule My.Sandbox do
+  use Exbox.Sandbox.Behaviour
+  allow String, [reverse: 1]
+  allow IO, [puts: 1]
+  allow Enum, :all
+end
 ```
 
 ### Evaluating code in a sandbox
 
 ```elixir
-  Exbox.Evaluator.evaluate '''
-    IO.puts "Hello World!"
-  ''', My.Sandbox
+Exbox.Evaluator.evaluate '''
+  IO.puts "Hello World!"
+''', My.Sandbox
 
-  #=>> Hello World!
-  #=> :ok
+#=>> Hello World!
+#=> :ok
 
-  Exbox.Evaluator.evaluate '''
-    "!ycnaf" |> String.reverse
-  ''', My.Sandbox
+Exbox.Evaluator.evaluate '''
+  "!ycnaf" |> String.reverse
+''', My.Sandbox
 
-  #=> "fancy!"
+#=> "fancy!"
 
-  Exbox.Evaluator.evaluate '''
-    "!ycnaf" |> String.reverse |> String.capitalize
-  ''', My.Sandbox
+Exbox.Evaluator.evaluate '''
+  "!ycnaf" |> String.reverse |> String.capitalize
+''', My.Sandbox
 
-  #=>> ** (UndefinedFunctionError) undefined function:
-  #=>>    Exbox.Sandbox.String.capitalize/1:
-  #=>>    Exbox.Sandbox.String.capitalize("fancy!")
+#=>> ** (UndefinedFunctionError) undefined function:
+#=>>    Exbox.Sandbox.String.capitalize/1:
+#=>>    Exbox.Sandbox.String.capitalize("fancy!")
 
-  Exbox.Evaluator.evaluate '''
-    defmodule Foo do
-      def bar do
-        IO.puts "baz"
-      end
+Exbox.Evaluator.evaluate '''
+  defmodule Foo do
+    def bar do
+      IO.puts "baz"
     end
-    Foo.bar
-  ''', My.Sandbox
+  end
+  Foo.bar
+''', My.Sandbox
 
-  #=>> baz
-  #=> :ok
+#=>> baz
+#=> :ok
 
-  Exbox.Evaluator.evaluate '''
-    defmodule Danger do
-      def zone do
-        File.rm_rf "/"
-      end
+Exbox.Evaluator.evaluate '''
+  defmodule Danger do
+    def zone do
+      File.rm_rf "/"
     end
-    Danger.zone
-  ''', My.Sandbox
+  end
+  Danger.zone
+''', My.Sandbox
 
-  #=>> ** (UndefinedFunctionError) undefined function:
-  #=>>    Exbox.Sandbox.File.rm_rf/1:
-  #=>>    Exbox.Sandbox.File.rm_rf("/")
+#=>> ** (UndefinedFunctionError) undefined function:
+#=>>    Exbox.Sandbox.File.rm_rf/1:
+#=>>    Exbox.Sandbox.File.rm_rf("/")
 ```
 
 Notes
@@ -124,3 +124,55 @@ To Do
 - Document using these records so other 3rd party libraries can maintain their own
 - Investigate custom context-aware module attributes similar to `@doc` that would enable 3rd party library developers to more easily specify the tags and taint levels of their functions
 - Write tests for and prevent undesirable access to top-level directives (like require) and meta-programming exploits
+
+AST Transformation
+------------------
+
+```elixir
+####
+# INPUT CODE:
+##
+  defmodule Foo do
+    def bar do
+      String.capitalize "hello"
+    end
+  end
+  Foo.bar
+
+####
+# QUOTED CODE:
+##
+  { :__block__, [line: 1], [
+    {:defmodule, [line: 1], [
+      {:__aliases__, [line: 1], [:Foo]}, [ #<<<=== convert to [:My, :Sandbox, :Foo]
+        do: {:def, [line: 2], [
+          {:bar, [line: 2], nil}, [
+            do: {
+              {:., [line: 3], [
+                {:__aliases__, [line: 3], [:String]}, #<<<=== convert to [:My, :Sandbox, :String]
+                :capitalize
+              ] },
+            [line: 3], ["hello"]
+          } ]
+        ] }
+      ]
+    ] },
+    {
+      {:., [line: 6], [
+        {:__aliases__, [line: 6], [:Foo]}, #<<<=== convert to [:My, :Sandbox, :Foo]
+        :bar
+      ] },
+      [line: 6], []
+    }
+  ] }
+
+####
+# EFFECTIVE CODE:
+##
+  defmodule My.Sandbox.Foo do
+    def bar do
+      My.Sandbox.String.capitalize "hello"
+    end
+  end
+  My.Sandbox.Foo.bar
+```
