@@ -37,7 +37,7 @@ It assumes you have Elixir 0.10.4-dev.
 
 ```elixir
   defmodule My.Sandbox do
-    allow String, [capitalize: 1]
+    allow String, [reverse: 1]
     allow IO, [puts: 1]
     allow Enum, :all
   end
@@ -69,7 +69,7 @@ It assumes you have Elixir 0.10.4-dev.
 
   Exbox.Evaluator.evaluate '''
     defmodule Foo do
-      def bar
+      def bar do
         IO.puts "baz"
       end
     end
@@ -81,7 +81,7 @@ It assumes you have Elixir 0.10.4-dev.
 
   Exbox.Evaluator.evaluate '''
     defmodule Danger do
-      def zone
+      def zone do
         File.rm_rf "/"
       end
     end
@@ -98,11 +98,11 @@ Notes
 
 I think this is a pretty cool approach to a sandbox. There isn't a lot of code in Exbox right now, but getting the metaprogramming and ast traversal to work took a lot of tinkering. There's a lot left to do, but I think things will go faster with this core proof of concept down.
 
-By effectively symlinking whitelisted functions into a clean namespace and forcing remote code execution into that context, actual library code can run unaffected. Disabling writing to the filesystem does not mean breaking a whitespaced function that relies on that ability.
+By effectively symlinking whitelisted functions into a clean namespace and forcing remote code execution into that context, actual library code can run unaffected. Disabling remote users from writing to the filesystem does not mean breaking a whitespaced function that relies on that ability.
 
-On the other hand, that means you have to have a very good idea of what it is you're whitelisting. Also worth noting is that while it (will) possible to exclude functions from an allowed module with `allow File, except: [rm_rf: 1]`, a true blacklisted mode where you don't have to explictly allow modules you're not concerned about is not possible in Elixir.
+On the other hand, that means you have to have a very good idea of what it is you're whitelisting. Also worth noting is that while it will be possible to exclude functions from an allowed module with `allow File, except: [rm_rf: 1]`, a true blacklisted mode where you don't have to explictly allow modules you're not worried about is non-trivial in Elixir.
 
-This is because while introspection on a module is good, introspection on the list of available modules isn't.
+This is because while introspection on a module is easy, introspection on the list of available modules isn't.
 
 To mitigate this inconvenience, one of the top priorities in the To Do section below is to provide various sandbox behaviour helpers that bring in pre-prepared, cultivated sets of functions.
 
@@ -115,6 +115,7 @@ To Do
 - Set up Application behaviour so other Elixir projects can easily use it
 - Allow Application configuration to influence if one-off Servers should be spun up on demand, or have a dedicated configurable set that's kept running
 - Have the Evaluator return bindings that can be persisted in a dedicated Server's state in between evaluation, effectively allowing persistent remote Elixir runtimes
+- Make exceptions properly bubble up from the Evaluator to the Server, so OTP can handle it accordingly
 - Define custom helpers to `allow` grouped, cultivated sets of functions
 - Allow sandboxes to be configured with 'taint levels', that can further filter the set of allowed functions
 - Create a record for storing taint levels and grouping tags of a module's functions
