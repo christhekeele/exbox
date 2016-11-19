@@ -1,12 +1,12 @@
 defmodule Exbox.Sandbox.Behaviour do
 
-  defmacro __using__(settings // []) do
+  defmacro __using__(settings \\ []) do
     quote location: :keep, unquote: false do
       import Exbox.Sandbox.Behaviour, only: [allow: 2]
     end
   end
 
-  defmacro allow(module, signatures // :all) do
+  defmacro allow(module, signatures \\ :all) do
     quote do
 
       oldspace = unquote(module)

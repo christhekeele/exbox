@@ -1,0 +1,9 @@
+{application,exbox,
+             [{registered,[]},
+              {description,"exbox"},
+              {vsn,"0.0.1"},
+              {modules,['Elixir.Exbox','Elixir.Exbox.Evaluator',
+                        'Elixir.Exbox.Sandbox.Behaviour',
+                        'Elixir.Exbox.Supervisor']},
+              {applications,[kernel,stdlib,elixir]},
+              {mod,{'Elixir.Exbox',[]}}]}.
