@@ -3,8 +3,8 @@ defmodule Exbox.Mixfile do
 
   def project do
     [ app: :exbox,
-      version: "0.0.1",
-      elixir: "~> 0.10.4-dev",
+      version: "0.0.2",
+      elixir: "~> 1.3",
       deps: deps ]
   end
 
