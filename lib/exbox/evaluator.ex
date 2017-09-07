@@ -3,6 +3,7 @@ defmodule Exbox.Evaluator do
   def evaluate(string, namespace) when is_binary string do
     evaluate namespaced string, namespace
   end
+  
   def evaluate(quoted_code) when is_tuple quoted_code do
     { result, _binding } = Code.eval_quoted(
       quoted_code,
@@ -28,6 +29,7 @@ defmodule Exbox.Evaluator do
       Module.split(namespace) ++ aliases
     }
   end
+  
   defp do_namespace({ token, meta, args }, namespace) when is_list(args) do
     {
       do_namespace(token, namespace),
@@ -35,6 +37,7 @@ defmodule Exbox.Evaluator do
       Enum.map(args, &do_namespace(&1, namespace))
     }
   end
+  
   defp do_namespace({ token, meta, args, kwargs }, namespace) when is_list(args) and is_list(kwargs) do
     {
       do_namespace(token, namespace),
@@ -43,14 +46,15 @@ defmodule Exbox.Evaluator do
       Enum.map(kwargs, &do_namespace(&1, namespace))
     }
   end
+  
   defp do_namespace(list, namespace) when is_list(list) do
     Enum.map(list, &do_namespace(&1, namespace))
   end
+  
   defp do_namespace({ key, value }, namespace) when is_atom(key) do
     { key, do_namespace(value, namespace) }
   end
-  defp do_namespace(quoted_code, _namespace) do
-    quoted_code
-  end
-
+  
+  defp do_namespace(quoted_code, _namespace), do: quoted_code
+  
 end

@@ -1,6 +1,6 @@
 defmodule Exbox.Sandbox.Behaviour do
-
-  defmacro __using__(settings \\ []) do
+  
+  defmacro __using__ do
     quote location: :keep, unquote: false do
       import Exbox.Sandbox.Behaviour, only: [allow: 2]
     end
@@ -8,7 +8,6 @@ defmodule Exbox.Sandbox.Behaviour do
 
   defmacro allow(module, signatures \\ :all) do
     quote do
-
       oldspace = unquote(module)
       namespace = Module.concat __MODULE__, unquote(module)
       signatures = case unquote(signatures) do
@@ -18,12 +17,9 @@ defmodule Exbox.Sandbox.Behaviour do
 
       proxy_functions = Enum.map( signatures,
         fn {func_name, arity} ->
-
           # Makes placeholder ast function arguments
           args = 0..arity
-            |> Enum.map( fn x ->
-                { :"arg#{x}", [], nil }
-              end )
+            |> Enum.map( fn x -> { :"arg#{x}", [], nil } end )
             |> tl
 
           quote do
@@ -31,13 +27,10 @@ defmodule Exbox.Sandbox.Behaviour do
               unquote(oldspace).unquote(func_name)(unquote_splicing(args))
             end
           end
-
         end
       )
 
       Module.create namespace, proxy_functions
-
     end
   end
-
 end
