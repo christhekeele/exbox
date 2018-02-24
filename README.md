@@ -3,7 +3,11 @@ Exbox
 
 Exbox is a Sandboxing library for Elixir. It allows you to build a safe environment and run untrusted Elixir code in it.
 
-*Status:* **proof-of-concept**
+*STATUS:* **unmaintained**
+
+This is an outdated initial proof of concept for a project that went with spinning up containers and running untrusted code there instead. The approach I took here—scanning the AST against a whitelist of allowed function calls—is an okay start but can be subverted in several ways, and doesn't prevent other insidious ways arbitrary programs can affect your system.
+
+The white-list metaprogramming itself is a little outdated, too—these days I would run the code through `:elixir_expand.expand/2` so you don't have to deal with things like aliases yourself, then scan through it with `Macro.prewalk/2` to validate against your whitelist.
 
 How It Works
 ------------
